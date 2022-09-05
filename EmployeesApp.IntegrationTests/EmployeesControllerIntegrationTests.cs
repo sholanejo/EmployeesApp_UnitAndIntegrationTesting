@@ -1,3 +1,5 @@
+using Microsoft.Net.Http.Headers;
+
 namespace EmployeesApp.IntegrationTests
 {
     public class EmployeesControllerIntegrationTests : IClassFixture<TestingWebAppFactory<Program>>
@@ -34,9 +36,15 @@ namespace EmployeesApp.IntegrationTests
         [Fact]
         public async Task Create_SentWrongModel_ReturnsViewWithErrorMessages()
         {
+
+            var initResponse = await _client.GetAsync("/Employees/Create");
+            var antiForgeryValues = await AntiForgeryTokenExtractor.ExtractAntiForgeryValues(initResponse);
+
             var postRequest = new HttpRequestMessage(HttpMethod.Post, "/Employees/Create");
+            postRequest.Headers.Add("Cookie", new CookieHeaderValue(AntiForgeryTokenExtractor.AntiForgeryCookieName, antiForgeryValues.cookieValue).ToString());
             var formModel = new Dictionary<string, string>
             {
+                {AntiForgeryTokenExtractor.AntiForgeryFieldName, antiForgeryValues.fieldValue },
                 {"Name", "New Employee" },
                 {"Age", "25" }
             };
@@ -54,10 +62,14 @@ namespace EmployeesApp.IntegrationTests
         [Fact]
         public async Task Create_WhenPOSTExecuted_ReturnsToIndexViewWithCreatedEmployee()
         {
+            var initResponse = await _client.GetAsync("/Employees/Create");
+            var antiForgeryValues = await AntiForgeryTokenExtractor.ExtractAntiForgeryValues(initResponse);
+
             var postRequest = new HttpRequestMessage(HttpMethod.Post, "/Employees/Create");
 
             var formModel = new Dictionary<string, string>
             {
+                {AntiForgeryTokenExtractor.AntiForgeryFieldName, antiForgeryValues.fieldValue },
                 {"Name", "New Employee" },
                 {"Age", "25" },
                 {"AccountNumber", "214-2343453556-22" }
